@@ -128,10 +128,10 @@ d.subset <- estimateDisp(d.subset, design) ## Estimate the common and tagwise di
 names(d.subset)  ## notice that the common disperion is now part of the d object
 
 d.subset  ## Here's a look at 
-
+d.subset$design
 # exact test for differential expression between pairs
 
-et_NvT <- exactTest(d.subset, pair=c("T","N"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+et_NvT <- exactTest(d.subset, pair=c("N_topM","T_topM"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
 et_NvF1 <- exactTest(d.subset, pair=c("F1","N"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
 et_TvF1 <- exactTest(d.subset, pair=c("T","F1"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
 
@@ -225,7 +225,7 @@ Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
 sig <- Tbl_NvT.DE$FDR < .05
 Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
 
-ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("N vs T differential expression")
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("N vs T differential expression, topM")
 
 write.csv(Tbl_NvT.DE, "Tbl_NvT.DE.csv")
 
