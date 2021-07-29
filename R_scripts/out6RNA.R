@@ -75,11 +75,11 @@ all_wide<- filter(all_wide, gene != "N_ambiguous")
 Data <- all_wide
 Data <- select(Data, -gene)
 # read in the annotation file
-Annotation <- read.csv("Mgutt_annotations.csv",header=T)
+Annotation <- read.csv("data/Mgutt_annotations.csv",header=T)
 
 # read in the Sample Info (treatment, etc)
 
-Sample_Info <- read.csv("AHQ_Sample_Info.csv", header = T)
+Sample_Info <- read.csv("data/AHQ_Sample_Info.csv", header = T)
 
 # make a DGE object
 Groups <- Sample_Info$Groups
@@ -109,8 +109,10 @@ d.subset$samples
 # reset the normalization factors & normalize it
 d.subset <- calcNormFactors(d.subset) 
 head(d.subset$samples)
+d.subset$counts
 
-d.subset$samples
+c <- cbind(d.subset$genes, d.subset$counts)
+write.csv(c, "c.csv")
 
 # explore the data with MDS 
 plotMDS(d.subset, method="bcv", col=as.numeric(d.subset$samples$group)) 
