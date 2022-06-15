@@ -1,108 +1,78 @@
 # test file changing
-
 # load required packates
 library(dplyr)
 library(tidyverse)
 library(edgeR)
+library(data.table)
+
+install.packages("edgeR")
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("edgeR")
 
 # set working directory
-setwd("~/Documents/out6RNA")
-
-## read in all the data and add the necessary columns
-AHQF1A_YB_19 <- read.csv("~/Dropbox/RNA2020/RNASeq0421/sample data/AHQF1A_YB_19ReadsPerGene.out.tab", sep="\t",
-                         col.names = c("gene", "count", "count_strand1", "count_strand2"))
-AHQF1A_YB_19 <- mutate(AHQF1A_YB_19, indv = "AHQF1A_YB_19")
+setwd("~/Desktop/cberg_YNP_RNA/readsPerGene")
 
 
-AHQN_topM_6 <- read.csv("~/Dropbox/RNA2020/RNASeq0421/sample data/AHQN_topM_6ReadsPerGene.out.tab", sep="\t",
-                        col.names = c("gene", "count", "count_strand1", "count_strand2"))
-AHQN_topM_6 <- mutate(AHQN_topM_6, indv = "AHQN_topM_6")
+#allFiles.list <- lapply(files, read.table, sep='\t',col.names = c("gene", "count", "count_strand1", "count_strand2"),idcol="files")
+
+# read file path
+all_paths <-list.files(path = "~/Desktop/cberg_YNP_RNA/readsPerGene",
+             pattern = "*ReadsPerGene.out.tab",
+             full.names = TRUE)
+
+all_paths
+
+all_content <-
+  all_paths %>%
+  lapply(read.table,
+         header = TRUE,
+         sep = "\t",
+         col.names = c("gene", "count", "count_strand1", "count_strand2"),
+         encoding = "UTF-8")
+
+all_filenames <- all_paths %>%
+  basename() %>%
+  as.list()
 
 
-AHQN_topM_2 <- read.csv("~/Dropbox/RNA2020/RNASeq0421/sample data/AHQNK_topM_2ReadsPerGene.out.tab", sep="\t",
-                        col.names = c("gene", "count", "count_strand1", "count_strand2"))
-AHQN_topM_2 <- mutate(AHQN_topM_2, indv = "AHQN_topM_2")
+all_lists <- mapply(c, all_content, all_filenames, SIMPLIFY = FALSE)
+all_result <- rbindlist(all_lists, fill=T)
 
-
-AHQN_topM_8 <- read.csv("~/Dropbox/RNA2020/RNASeq0421/sample data/AHQNK_topM_8ReadsPerGene.out.tab", sep="\t",
-                        col.names = c("gene", "count", "count_strand1", "count_strand2"))
-AHQN_topM_8 <- mutate(AHQN_topM_8, indv = "AHQN_topM_8")
-
-
-AHQN_YB_9 <- read.csv("~/Dropbox/RNA2020/RNASeq0421/sample data/AHQNK_YB_9ReadsPerGene.out.tab", sep="\t",
-                      col.names = c("gene", "count", "count_strand1", "count_strand2"))
-AHQN_YB_9 <- mutate(AHQN_YB_9, indv = "AHQN_YB_9")
-
-
-AHQN_YB_12 <- read.csv("~/Dropbox/RNA2020/RNASeq0421/sample data/AHQNK_YB_12ReadsPerGene.out.tab", sep="\t",
-                       col.names = c("gene", "count", "count_strand1", "count_strand2"))
-AHQN_YB_12 <- mutate(AHQN_YB_12, indv = "AHQN_YB_12")
-
-
-AHQT_topM_4 <- read.csv("~/Dropbox/RNA2020/RNASeq0421/sample data/AHQT_topM_4ReadsPerGene.out.tab", sep="\t",
-                        col.names = c("gene", "count", "count_strand1", "count_strand2"))
-AHQT_topM_4 <- mutate(AHQT_topM_4, indv = "AHQT_topM_4")
-
-
-AHQT_topM_5 <- read.csv("~/Dropbox/RNA2020/RNASeq0421/sample data/AHQT_topM_5ReadsPerGene.out.tab", sep="\t",
-                        col.names = c("gene", "count", "count_strand1", "count_strand2"))
-AHQT_topM_5 <- mutate(AHQT_topM_5, indv = "AHQT_topM_5")
-
-
-AHQT_YB_3 <- read.csv("~/Dropbox/RNA2020/RNASeq0421/sample data/AHQT_YB_3ReadsPerGene.out.tab", sep="\t",
-                      col.names = c("gene", "count", "count_strand1", "count_strand2"))
-AHQT_YB_3 <- mutate(AHQT_YB_3, indv = "AHQT_YB_3")
-
-
-## collate all the individuals
-#all <- rbind(AHQF1A_YB_19,AHQN_topM_6)
-all <- rbind(AHQN_topM_2,AHQN_topM_6)
-all <- rbind(all, AHQN_topM_8)
-#all <- rbind(all, AHQN_YB_9)
-#all <- rbind(all, AHQN_YB_12)
-all <- rbind(all, AHQT_topM_4)
-all <- rbind(all, AHQT_topM_5)
-#all <- rbind(all, AHQT_YB_3)
-
-head(all)
-
+all_filenames
 # we'll just use the counts
-all <- select(all, gene, count, indv)
+all <- select(all_result, gene, count, V1)
 write.csv(all, "all.csv")
-
-AHQN_topM_2
-
+dim(all)
+all_result
 #spread so columns are individuals and rows are genes
-all_wide <- spread(all, indv, count)
+all_wide <- spread(all, V1, count)
 all_wide<- filter(all_wide, gene != "N_noFeature")
 all_wide<- filter(all_wide, gene != "N_multimapping")
 all_wide<- filter(all_wide, gene != "N_ambiguous")
 
-
+all_wide$gene
 Data <- all_wide
 Data <- select(Data, -gene)
 
-View(Data)
-
-d$genes
-all_wide
-
+dim(all_wide)
 write.csv(all_wide, "all_wide.csv")
 # read in the annotation file
-Annotation <- read.csv("data/Mgutt_annotations.csv",header=T)
-View(Annotation)
+Annotation <- read.csv("Mgutt_annotations.csv",header=T)
+#View(Annotation)
 # read in the Sample Info (treatment, etc)
 
-Sample_Info <- read.csv("data/AHQ_Sample_Info4.csv", header = T)
+Sample_Info <- read.csv("YNP_RNA_sample_info.csv", header = T)
 write.csv(Data, "Data.csv")
 # make a DGE object
-Groups <- Sample_Info$Groups
-d <- DGEList(counts=Data,group=factor(Groups), genes=Annotation)
+Groups <- Sample_Info$genotype
+d <- DGEList(counts=Data,group=factor(Groups), genes=all_wide$gene)
+ncol(Data)
 
-View(d$genes)
-
-write.csv((cbind(d$counts, d$genes)), "test_new.csv")
-
+Sample_Info$genotype
+Data
 # explore & filter data to remove irrelevant sites
 head(d$samples)
 head(d$counts)
@@ -122,6 +92,8 @@ dim(d.subset)
 d.subset$samples$lib.size <- colSums(d.subset$counts) 
 d.subset$samples
 
+d.sub.sub = filter(d.subset, lib.size>1000000)
+
 ## Normalizing the data 
 
 # explore the variation
@@ -130,7 +102,7 @@ d.subset$samples
 
 
 # reset the normalization factors & normalize it
-d.subset <- calcNormFactors(d.subset) 
+d.subset <- calcNormFactors(d.sub.sub) 
 
 # explore the data with MDS 
 plotMDS(d.subset, method="bcv", col=as.numeric(d.subset$samples$group)) 
@@ -145,9 +117,11 @@ write.csv(d.subset$genes, "genes.csv")
 # estimate dispersion
 d.subset <- estimateDisp(d.subset, design)
 
-# exact test for differential expression between pairs
 
-et_NvT <- exactTest(d.subset, pair=c("N_topM","T_topM"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_LD","AHQN_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
 
 # make tables of the top tags for analysis
 # the problem happens before this part
@@ -159,11 +133,9 @@ write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the t
 is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
 summary(is.de.NvT)
 
-
 ## plot the differential expression
 plotMD(et_NvT)
 abline(h=c(-1, 1), col="blue")
-
 
 # filter to only keep genes with FDR < .05
 NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
@@ -175,13 +147,927 @@ NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
 
 write.csv(NvT.DE, "NvT_DE.csv")
 
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQT_SD.csv")
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_LD","AHQFi1_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
 
 Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
 sig <- Tbl_NvT.DE$FDR < .05
 Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
 
-ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("N vs T differential expression, topM")
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQF1i_LD.csv")
 
-write.csv(Tbl_NvT.DE, "Tbl_NvT.DE2.csv")
 
-keep <- rowSums(cpm(d) > 20) >= 2 
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_LD","AHQFi1_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQF1i_SD.csv")
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_LD","AHQFix_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQF1x_LD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_LD","AHQFix_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQF1x_SD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_LD","AHQN_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQN_LD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_LD","AHQN_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQN_SD.csv")
+
+
+
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_SD","AHQF1i_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQF1i_SD.csv")
+
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_SD","AHQF1i_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQF1i_LD.csv")
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_SD","AHQF1x_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQF1x_LD.csv")
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_SD","AHQF1x_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQF1x_SD.csv")
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_SD","AHQFN_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQN_SD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQT_SD","AHQN_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQT_LDvsAHQN_LD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1i_SD","AHQF1i_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1i_SDvsAHQF1i_LD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1i_SD","AHQF1x_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1i_SDvsAHQF1x_SD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1i_SD","AHQF1X_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1i_SDvsAHQF1X_LD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1i_SD","AHQN_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1i_SDvsAHQN_SD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1i_SD","AHQN_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1i_SDvsAHQFN_LD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1i_LD","AHQF1x_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1i_LDvsAHQF1x_SD.csv")
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1i_LD","AHQF1x_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1i_LDvsAHQF1x_LD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1i_LD","AHQN_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1i_LDvsAHQN_SD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1i_LD","AHQN_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1i_LDvsAHQN_LD.csv")
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1x_SD","AHQF1x_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1X_LDvsAHQF1x_SD.csv")
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1x_SD","AHQN_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQF1X_LDvsAHQN_SD.csv")
+
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1x_SD","AHQN_LD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQN_LDvsAHQN_SD.csv")
+
+
+# exact test for differential expression between pairs -- run this code between all genotype & treatment pairs
+
+et_NvT <- exactTest(d.subset, pair=c("AHQF1x_SD","AHQN_SD"))  ## You will change "pair" and the name to the appropriate labels for your groups' questions.
+
+# make tables of the top tags for analysis
+# the problem happens before this part
+Tbl_NvT <- topTags(et_NvT, n=nrow(et_NvT$table))$table  ## Out put the results into a table
+write.table(Tbl_NvT, file="Tbl_NvT.csv", sep=",", row.names=TRUE)  ## Save the table for analyses next week!
+
+## total number of significantly differently expressed genes for each pair: 
+
+is.de.NvT <- decideTestsDGE(et_NvT, p = 0.05)
+summary(is.de.NvT)
+
+## plot the differential expression
+plotMD(et_NvT)
+abline(h=c(-1, 1), col="blue")
+
+# filter to only keep genes with FDR < .05
+NvT.DE <-subset(Tbl_NvT, Tbl_NvT$FDR < 0.05)
+
+dim(NvT.DE)
+
+NvT.up <- subset(NvT.DE, NvT.DE$logFC > 0)
+NvT.down <- subset(NvT.DE, NvT.DE$logFC < 0)
+
+write.csv(NvT.DE, "NvT_DE.csv")
+
+Tbl_NvT.DE <- mutate(Tbl_NvT, log10p= -log10(PValue))
+sig <- Tbl_NvT.DE$FDR < .05
+Tbl_NvT.DE <- mutate(Tbl_NvT.DE, sig = sig)
+
+ggplot(Tbl_NvT.DE, aes(x=logFC, y=log10p, col=sig)) + geom_point() + theme_classic() + theme(legend.position = "none") + ggtitle("AHQT_LD vs. AHQN_LD")
+write.csv(Tbl_NvT.DE, "AHQN_LDvsAHQN_SD.csv")
+
+

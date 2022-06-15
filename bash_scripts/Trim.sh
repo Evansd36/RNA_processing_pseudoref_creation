@@ -41,17 +41,17 @@ echo $filename
 echo $rdgrp
 echo $t
 
- 	gunzip ${filename}.1.fastq.gz
-	gunzip ${filename}.2.fastq.gz
+ 	gunzip ${filename}_1.fq.gz
+	gunzip ${filename}_2.fq.gz
 	#bunzip2 ${filename}.1.fastq.bz2
 	#bunzip2 ${filename}.2.fastq.bz2
 
 	# remove adapters and low quality seq
 	echo "Trimming low quality reads and adapters from ${filename}"
-	java -jar /home/thom_nelson/opt/Trimmomatic-0.35/trimmomatic-0.35.jar PE \
-	     -threads $t -phred33 ${filename}.1.fastq ${filename}.2.fastq \
+	java -jar /Users/lilafishman/Desktop/cberg_YNP_rna/Trimmomatic-0.39/trimmomatic-0.39.jar  PE \
+	     -threads $t -phred33 ${filename}_1.fq ${filename}_2.fq \
 	     ${filename}.1.paired.fastq ${filename}.1.unpaired.fastq \
 	     ${filename}.2.paired.fastq ${filename}.2.unpaired.fastq \
-	     ILLUMINACLIP:/home/thom_nelson/resources/Illumina/Many.TruSeq.PE.fa:2:20:10:4 \
+	     ILLUMINACLIP:/Users/lilafishman/Desktop/cberg_YNP_RNA/Trimmomatic-0.39/adapters/TruSeq3-PE.fa:2:20:10:4 \
 	     LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36  
 	     
