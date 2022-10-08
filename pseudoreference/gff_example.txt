@@ -1,0 +1,7 @@
+##gff-version 3
+##annot-version v2.0
+scaffold_1_AHQT	phytozomev10	gene	16375	23539	.	-	.	ID=Migut.A00001.v2.0;Name=Migut.A00001;ancestorIdentifier=mgv1a001726m.g.IM62.v1.1
+scaffold_1_AHQT	phytozomev10	mRNA	16375	23539	.	-	.	ID=Migut.A00001.1.v2.0;Name=Migut.A00001.1;pacid=28939341;longest=1;Parent=Migut.A00001.v2.0
+scaffold_1_AHQT	phytozomev10	exon	23117	23539	.	-	.	ID=Migut.A00001.1.v2.0.exon.1;Parent=Migut.A00001.1.v2.0;pacid=28939341
+scaffold_1_AHQT	phytozomev10	CDS	23117	23221	.	-	0	ID=Migut.A00001.1.v2.0.CDS.1;Parent=Migut.A00001.1.v2.0;pacid=28939341
+scaffold_1_AHQT	phytozomev10	five_prime_UTR	23222	23539	.	-	.	ID=Migut.A00001.1.v2.0.five_prime_UTR.1;Parent=Migut.A00001.1.v2.0;pacid=28939341
