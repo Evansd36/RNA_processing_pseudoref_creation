@@ -60,21 +60,23 @@ samtools index <name_of_file.bam>
 - GATK HaplotypeCaller (in GVCF mode) Identify phased SNP and insertion/deletion variants from the SF5 alignment.
 https://gatk.broadinstitute.org/hc/en-us/articles/360037225632-HaplotypeCaller
 - Single sample GVCF calling without allele specific annotation was used because biallelic sites will be extracted and used, so multiallelic site calling doesn’t really matter
+- ERC GVCF command does not work with bams made from multiple samples (I.e. if used samtools merged command to combine multiple bams together)
 
 ```java
-gatk --java-options "-Xmx4g" HaplotypeCaller  \ 
--R <file/path/to/reference.fasta> \ 
--I  <file/path/to/name_of_file.bam> \ 
--O <file/path/to/output.g.vcf.gz> \ -ERC GVCF
+gatk --java-options "-Xmx4g" HaplotypeCaller  \
+-R <file/path/to/reference.fasta> \
+-I  <file/path/to/name_of_file.bam> \
+-O <file/path/to/output.g.vcf.gz> \
+-ERC GVCF
 ```
 
 ###	GATK GenotypeGVCFs 
 https://gatk.broadinstitute.org/hc/en-us/articles/360037057852-GenotypeGVCFs
 
 ```java
-gatk --java-options "-Xmx4g" GenotypeGVCFs \ 
--R <file/path/to/reference.fasta> \  
--V <file/path/to/output.g.vcf.gz> \  
+gatk --java-options "-Xmx4g" GenotypeGVCFs \
+-R <file/path/to/reference.fasta> \
+-V <file/path/to/output.g.vcf.gz> \
 -O <file/path/to/output.vcf.gz>
 ```
 
@@ -82,11 +84,11 @@ gatk --java-options "-Xmx4g" GenotypeGVCFs \
 https://gatk.broadinstitute.org/hc/en-us/articles/360037055952-SelectVariants
 
 ```java
-gatk SelectVariants \ 
--R <file/path/to/reference.fasta> \ 
--V <file/path/to/output.vcf.gz> \ 
---select-type-to-include SNP \ 
---restrict-alleles-to BIALLELIC  
+gatk SelectVariants \
+-R <file/path/to/reference.fasta> \
+-V <file/path/to/output.vcf.gz> \
+--select-type-to-include SNP \
+--restrict-alleles-to BIALLELIC \
 -O <file/path/to/biallelic_snps.output.vcf>
 ```
 
